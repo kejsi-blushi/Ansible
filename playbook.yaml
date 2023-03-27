@@ -1,0 +1,61 @@
+- name: Django and React app 
+  hosts: kejsi
+  remote_user: azureuser
+  gather_facts: false
+  become : true
+  become_method : sudo
+
+
+  tasks:
+    - name : Install aptitude.
+      apt :
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl 
+          - software-properties-common
+        update_cache : true
+
+    - name : Add Docker GPG apt key
+      apt_key : 
+        url : https://download.docker.com/linux/ubuntu/gpg
+        state : present
+
+    - name : Add Docker repository
+      apt_repository :
+        repo : deb https://download.docker.com/linux/ubuntu/ focal stable
+        state : present
+
+    - name : Update APT and install docker-ce
+      apt:
+          name : docker-ce
+          state : latest
+          update_cache : true
+    
+    - name: pull Django img
+      docker_image:
+        name: kejsiblushi/djangoapp
+        source: pull
+
+    - name: pull React img
+      docker_image:
+        name: kejsiblushi/my-app
+        source: pull
+
+    - name : Create Docker container for Django app
+      docker_container :
+        name : DjangoContainer
+        image : kejsiblushi/djangoapp
+        state : started
+        ports:
+          - "8000:8000"
+        detach : true
+ 
+    - name : Create Docker container for React app
+      docker_container :
+        name : ReactContainer
+        image : kejsiblushi/my-app
+        state : started
+        ports:
+          - "80:80"
+        detach : true
